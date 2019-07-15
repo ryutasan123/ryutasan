@@ -1,0 +1,52 @@
+import tkinter as tk
+import tkinter.filedialog as fd
+import PIL.Image
+import PIL.ImageTk
+
+import sklearn.datasets
+import sklearn.svm
+import numpy
+
+def imageToData(filename):
+
+    grey_image = PIL.Image.open(filename).convert('L')
+    grey_image = grey_image.resize((8, 8), PIL.Image.ANTIALIAS)
+
+    dispImage = PIL.ImageTk.PhotoImage(grey_image.resize((300,300)))
+    imageLabel.configure(image = dispImage)
+    imageLabel.image = dispImage
+
+    numImage = numpy.asarray(grey_image, dtype = float)
+    print('256 :',numImage)
+    numImage = numpy.floor(16 - 16 * (numImage / 256))
+    print('グレースケール :', numImage)
+    numImage = numImage.flatten()
+    print('flatten :', numImage)
+
+    return numImage
+
+def predictDigits(data):
+    digits = sklearn.datasets.load_digits()
+
+    clf = sklearn.svm.SVC(gamma = 0.001)
+    clf.fit(digits.data, digits.target)
+
+    n = clf.predict([data])
+    textLabel.configure(text = 'この画像は' + str(n) + 'です')
+
+def openFile():
+    fpath = fd.askopenfilename()
+    if fpath:
+        data = imageToData(fpath)
+
+        predictDigits(data)
+
+root = tk.Tk()
+root.geometry('400x400')
+btn = tk.Button(root, text = 'ファイルを開く', command = openFile)
+imageLabel = tk.Label()
+btn.pack()
+imageLabel.pack()
+textLabel = tk.Label(text = '数字を当てます')
+textLabel.pack()
+tk.mainloop()
